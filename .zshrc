@@ -70,7 +70,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(git vi-mode)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -85,11 +85,11 @@ source $ZSH/oh-my-zsh.sh
 # if [[ -n $SSH_CONNECTION ]]; then
 #   export EDITOR='vim'
 # else
-#   export EDITOR='mvim'
+#   export EDITOR='nvim'
 # fi
 
 # Compilation flags
-# export ARCHFLAGS="-arch x86_64"
+# export ARCHFLAGS="-arch $(uname -m)"
 
 # Set personal aliases, overriding those provided by Oh My Zsh libs,
 # plugins, and themes. Aliases can be placed here, though Oh My Zsh
@@ -103,11 +103,20 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+# Keep a full history across all terminal sessions
+HISTFILE=~/.zsh_history     # The file where the history is saved
+HISTSIZE=100000             # Number of lines kept in memory during a session
+SAVEHIST=100000             # Number of lines to save in the history file
+setopt APPEND_HISTORY       # Append history to the history file, rather than overwriting it
+setopt SHARE_HISTORY        # Share history across multiple terminals
+setopt HIST_IGNORE_DUPS     # Ignore duplicated commands in the history
+setopt HIST_IGNORE_ALL_DUPS # Remove all previous duplicates of a command
+setopt HIST_REDUCE_BLANKS   # Remove superfluous blanks from commands
+setopt HIST_VERIFY          # Prompt for confirmation before running a history substitution command
 
+alias ver="vim ~/.zshrc"
 alias clonar="git clone"
-alias recarregar="echo '\n\nRecarregando...\n\n' && source ~/.zshrc && echo '\n\nShell recarregado!\n\n'"
-
-
+alias recarregar="source ~/.zshrc"
 
 function vai() {
     local message="${1:-"atualizacao em $(date -u -d '-3 hours' '+%d/%m/%Y %H:%M:%S')"}"
@@ -118,97 +127,49 @@ function vai() {
 
 
 
+alias DESLIGUE="echo "271828" | sudo -S poweroff"
+alias REINICIE="echo "271828" | sudo -S reboot"
 
 clonrepo() {
-    if [[ "$1" == *"/"* ]]; then
-        # If the argument contains a "/", split it into username and repo
-        username="${1%%/*}"
-        repo="${1##*/}"
-    else
-        # If no "/", default username to "SaganGromov" and use the argument as repo
-        username="SaganGromov"
-        repo="$1"
-    fi
+  git clone git@github.com:SaganGromov/$1.git
+}
 
-    if [[ "$username" == "SaganGromov" ]]; then
-        git clone "git@github.com:SaganGromov/${repo}.git"
+copiar() {
+    if [[ "$1" == "-a" ]]; then
+        shift
+        cp "$@"
+    elif [[ "$1" == "-p" ]]; then
+        shift
+        cp -r "$@"
     else
-        git clone "https://github.com/${username}/${repo}.git"
+        echo "Opção desconhecida!"
     fi
 }
 
-
-alias ver="vim ~/.zshrc"
-alias artigo="cd ~/artigo/almostJul16"
-
-
-
-alias cnvim="nvim ~/.config/nvim/init.lua"
-
-
-
-
-
-encontrar() {
+mover() {
     if [[ "$1" == "-a" ]]; then
         shift
-        find . -iname "$@"
+        mv "$@"
     elif [[ "$1" == "-p" ]]; then
         shift
-        find . -type d -iname "$@"
+        mv "$@"
     else
         echo "Opção desconhecida!"
     fi
 }
 
 
-encontrar_fuzzy() {
-    if [[ "$1" == "-a" ]]; then
-        shift
-        find . -iname "*" | fzf --filter="$@"
-    elif [[ "$1" == "-p" ]]; then
-        shift
-        find . -type d -iname "*" | fzf --filter="$@"
-    else
-        echo "Opção desconhecida: $1"
-    fi
-}
 
-
-
-alias abrirnochrome="google-chrome --new-window ."
-
-
-alias reset_hist='echo "{}" > ~/hist.json'
-
-
-export PYTHONSTARTUP=~/startup.py
-
-
-# Function to toggle dock ON (dock is always shown)
-#
-#
-
-# Function to fix (make dock always visible)
-fixar() {
-    dconf write /org/gnome/shell/extensions/dash-to-dock/dock-fixed true
-    dconf write /org/gnome/shell/extensions/dash-to-dock/intellihide false
-}
-
-# Function to hide dock automatically when windows are overlapping
-desfixar() {
-    dconf write /org/gnome/shell/extensions/dash-to-dock/dock-fixed false
-    dconf write /org/gnome/shell/extensions/dash-to-dock/intellihide true
-}
-
-
+alias ajuda_venv='~/scripts/ajuda_venv.sh'
+alias verHistorico='vim ~/.zsh_history'
+alias verVim='vim ~/.vimrc'
 
 criarRepo() {
     if [ "$#" -ne 3 ]; then
         echo "Usage: criarRepo <repository-name> publico|privado <path/to/directory>"
         return 1
     fi
-
+    
     REPO_NAME=$1
     PRIVACY=$2
     REPO_PATH=$3
@@ -235,6 +196,65 @@ criarRepo() {
     git push --set-upstream origin master
 }
 
+alias fixar="/usr/bin/gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed true"
+alias desfixar="/usr/bin/gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false"
+export STEAM_COMPAT_DATA_PATH=~/.steam/steam/steamapps/compatdata/
+
+
+function ajudaVenv() {
+    echo "Instruções para criar e usar um ambiente virtual no Python:"
+    echo "1. Para criar um ambiente virtual, use o comando:"
+    echo "   python3 -m venv nome_do_ambiente"
+    echo "   Onde 'nome_do_ambiente' é o nome que você deseja dar ao ambiente."
+    echo ""
+    echo "2. Para ativar o ambiente virtual, execute o comando:"
+    echo "   source nome_do_ambiente/bin/activate"
+    echo "   No Windows, use 'nome_do_ambiente\\Scripts\\activate'."
+    echo ""
+    echo "3. Com o ambiente ativado, você pode instalar pacotes que ficarão isolados nele."
+    echo "   Exemplo: pip install nome_do_pacote"
+    echo ""
+    echo "4. Para desativar o ambiente, basta usar o comando:"
+    echo "   deactivate"
+    echo ""
+    echo "Lembre-se de ativar o ambiente sempre que for trabalhar no projeto e desativá-lo ao final."
+}
+
+ajudaTmux() {
+  cat << 'EOF'
+TMUX CHEATSHEET
+--------------
+# Session Management
+tmux new -s session_name         # Create a new session named "session_name"
+tmux attach -t session_name      # Attach to an existing session
+tmux ls                          # List all tmux sessions
+tmux kill-session -t session_name # Kill a specific session
+tmux kill-server                 # Kill all sessions
+
+# Windows & Panes
+Ctrl+b c                          # Create new window
+Ctrl+b ,                          # Rename current window
+Ctrl+b w                          # List windows
+Ctrl+b n                          # Move to next window
+Ctrl+b p                          # Move to previous window
+Ctrl+b &                          # Close current window
+Ctrl+b %                          # Split vertically
+Ctrl+b "                          # Split horizontally
+Ctrl+b o                          # Switch to next pane
+Ctrl+b x                          # Close current pane
+
+# Copy & Paste
+Ctrl+b [                          # Enter copy mode
+Ctrl+b ]                          # Paste last copied text
+
+# Misc
+Ctrl+b d                          # Detach from session
+Ctrl+b ?                          # Show help in tmux
+
+EOF
+}
+
+
 alias listarPastas='ls -d */'
 
 alias listarRepos="gh repo list SaganGromov"
@@ -243,7 +263,7 @@ alias listarRepos="gh repo list SaganGromov"
 criarRepoAqui() {
     # Get the current directory name to use as the repository name
     local repo_name=${PWD##*/}
-
+    
     # Verify that an argument has been provided
     if [[ "$1" != "--publico" && "$1" != "--privado" ]]; then
         echo "Usage: criarRepoAqui --publico|--privado"
@@ -257,12 +277,12 @@ criarRepoAqui() {
     elif [[ "$1" == "--privado" ]]; then
         visibility="--private"
     fi
-
+    
     # Initialize the local Git repository, add all files, and make an initial commit
     git init
     git add .
     git commit -m "commit inicial"
-
+    
     # Create a GitHub repository with the same name as the current directory
     gh repo create "$repo_name" $visibility --source=. --remote=origin
 
@@ -275,122 +295,130 @@ criarRepoAqui() {
 senha() {
     # Generate an 11-character hash similar to a Git commit hash
     local hash=$(LC_ALL=C tr -dc 'a-f0-9' < /dev/urandom | head -c 11)
-
+    
     # Copy the hash to the clipboard
     echo "$hash" | xclip -selection clipboard  # For Linux with xclip installed
     echo "$hash copied to clipboard."
 }
 
 
-# Store the last directory accessed
-export LAST_DIR=$(pwd)
-
-check_and_run_script() {
-    # Define the target directory with $HOME for proper path expansion
-    local target_dir="$HOME/artigo"
-
-    # Get the current working directory
-    local current_dir=$(pwd)
-
-    # Check if you've just changed to the target directory
-    if [[ "$current_dir" == "$target_dir" && "$LAST_DIR" != "$target_dir" ]]; then
-        # Execute the script
-        echo '\n\nNavegação ao diretório do artigo detectada!\n\n'
-        # $HOME/auto_password.exp
-    fi
-
-    # Update LAST_DIR to the current directory
-    LAST_DIR=$current_dir
+function pararAlarme() {
+	curl -X POST http://100.83.170.86:8000/api/speak \
+ 	 -H "Authorization: Basic $(echo -n 'user:pass' | base64)" \
+ 	 -H "Content-Type: application/json" \
+  	-d '{"parar": true}'
 }
 
-# Use the precmd hook to run the check function before each prompt
-autoload -Uz add-zsh-hook
-add-zsh-hook precmd check_and_run_script
 
-
-
-alias apagaTudoAqui='find . -mindepth 1 ! -name ".*" -exec rm -rf {} +'
+alias apagaTudoAqui='find . -mindepth 1 -not -path "./.*" -exec rm -rf {} +'
 alias site='ssh -i ~/Downloads/LightsailDefaultKey-us-east-1.pem ubuntu@3.221.109.213'
 
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
+export PATH=$PATH:/usr/local/go/bin
 
-# ---- FZF -----
-
-# Set up fzf key bindings and fuzzy completion
-eval "$(fzf --zsh)"
-
-
-
-# CUSTOM WIDGET
-# Set up fzf key bindings and fuzzy completion
-eval "$(fzf --zsh)"
-
-clonrepo_widget() {
-  if [[ $BUFFER == clonrepo* ]]; then
-    local repo_selected=$(
-      gh repo list SaganGromov --limit 1000 | awk '{print $1}' | fzf --prompt='Select repo> '
-    )
-    if [[ -n $repo_selected ]]; then
-      BUFFER="clonrepo $repo_selected"
-      CURSOR=${#BUFFER}
-    fi
-    zle redisplay
-  else
-    zle fzf-file-widget
-  fi
+rmd() {
+    local current_dir=$(pwd)  # Get the current directory
+    cd .. || return           # Move to the parent directory
+    rm -rf "$current_dir"     # Delete the original directory
 }
 
-zle -N clonrepo_widget
-bindkey '^T' clonrepo_widget
+
+copie() {
+    if [[ $# -lt 2 ]]; then
+        echo "Usage: copie <source1> [source2 ...] <destination_folder>"
+        return 1
+    fi
+
+    # All arguments except the last are sources
+    local destination_folder="${@: -1}"
+    local sources=("${@:1:$#-1}")
+
+    # Ensure the destination is a directory
+    if [[ ! -d "$destination_folder" ]]; then
+        echo "Error: Destination must be a directory."
+        return 1
+    fi
+
+    # Perform the copy using rsync
+    rsync -aAXHv --progress --info=progress2 --partial --no-compress --whole-file --preallocate \
+        "${sources[@]}" "${destination_folder%/}/"
+}
 
 
+# Set up fzf key bindings and fuzzy completion
 
-# END OF CUSTOM WIDGET 
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-# source <(fzf --zsh)
-eval "$(zoxide init zsh)"
-alias cd="z"
-source /home/linuxbrew/.linuxbrew/opt/zsh-autosuggestions/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /home/linuxbrew/.linuxbrew/opt/zsh-syntax-highlighting/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
-# -- Use fd instead of fzf --
 
-export FZF_DEFAULT_COMMAND="fd --hidden --strip-cwd-prefix --exclude .git"
+# export FZF_DEFAULT_COMMAND="fd --hidden --strip-cwd-prefix --exclude .git"
+export FZF_DEFAULT_COMMAND="fd --hidden --exclude .git"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND="fd --type=d --hidden --strip-cwd-prefix --exclude .git"
 
-# Use fd (https://github.com/sharkdp/fd) for listing path candidates.
-# - The first argument to the function ($1) is the base path to start traversal
-# - See the source code (completion.{bash,zsh}) for the details.
-_fzf_compgen_path() {
-  fd --hidden --exclude .git . "$1"
-}
+export FZF_DEFAULT_OPTS="--layout=reverse --height=40% --preview='
+if [ -d {} ]; then
+  ls -la {} | head -200
+elif [[ {} =~ \.(md|txt|py|java|tex|sh|c|cpp|log|json)$ ]]; then
+  bat --style=numbers --color=always --line-range :500 {}
+else
+  file_type=$(file --mime-type -b {})
+  echo \"This is a $file_type file and admits no terminal preview.\"
+fi'"
 
-# Use fd to generate the list for directory completion
-_fzf_compgen_dir() {
-  fd --type=d --hidden --exclude .git . "$1"
-}
 
-# FZF preview customization
-show_file_or_dir_preview="if [ -d {} ]; then eza --tree --color=always {} | head -200; else bat -n --color=always --line-range :500 {}; fi"
+# _fzf_compgen_path() {
+#   fd --hidden --exclude .git . "$1"
+# }
 
-export FZF_CTRL_T_OPTS="--preview '$show_file_or_dir_preview'"
-export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
+# # Use fd to generate the list for directory completion
+# _fzf_compgen_dir() {
+#   fd --type=d --hidden --exclude .git . "$1"
+# }
+
+
+# Define a preview command that works correctly
+# preview_cmd="\
+# if [ -d {} ]; then \
+#   eza --tree --color=always {} | head -200; \
+# elif [[ {} =~ \.(md|txt|py|java|tex|sh|c|cpp|log)$ ]]; then \
+#   bat -n --color=always --line-range :500 {}; \
+# else \
+#   echo 'No preview available for this file type.'; \
+# fi"
+
+# # Ensure correct quoting and escaping for the preview option
+# export FZF_CTRL_T_OPTS="--preview=\"$preview_cmd\" --preview-window=right:60%:wrap"
+# export FZF_ALT_C_OPTS="--preview=\"eza --tree --color=always {} | head -200\" --preview-window=right:60%:wrap"
 
 # Advanced customization of fzf options via _fzf_comprun function
-_fzf_comprun() {
-  local command=$1
-  shift
+# _fzf_comprun() {
+#   local command=$1
+#   shift
 
-  case "$command" in
-    cd)           fzf --preview 'eza --tree --color=always {} | head -200' "$@" ;;
-    export|unset) fzf --preview "eval 'echo ${}'"         "$@" ;;
-    ssh)          fzf --preview 'dig {}'                   "$@" ;;
-    *)            fzf --preview "$show_file_or_dir_preview" "$@" ;;
-  esac
-}
+#   case "$command" in
+#     cd)           fzf --preview="eza --tree --color=always {} | head -200" --preview-window=right:60%:wrap "$@" ;;
+#     export|unset) fzf --preview="eval 'echo ${}'" --preview-window=wrap "$@" ;;
+#     ssh)          fzf --preview="dig {}" --preview-window=wrap "$@" ;;
+#     *)            fzf --preview="$preview_cmd" --preview-window=right:60%:wrap "$@" ;;
+#   esac
+# }
+
+
+
+
+
+bindkey -s "^G" ""
+source ~/fzf-git.sh/fzf-git.sh
+
+alias ls="eza --color=always --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
+
+# thefuck alias
+eval $(thefuck --alias)
+
+# ---- Zoxide (better cd) ----
+eval "$(zoxide init zsh)"
 
 
 # history setup
@@ -405,58 +433,249 @@ setopt hist_verify
 # completion using arrow keys (based on history)
 bindkey '^[[A' history-search-backward
 bindkey '^[[B' history-search-forward
+source /home/linuxbrew/.linuxbrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /home/linuxbrew/.linuxbrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
-eval 
-            fuck () {
-                TF_PYTHONIOENCODING=$PYTHONIOENCODING;
-                export TF_SHELL=zsh;
-                export TF_ALIAS=fuck;
-                TF_SHELL_ALIASES=$(alias);
-                export TF_SHELL_ALIASES;
-                TF_HISTORY="$(fc -ln -10)";
-                export TF_HISTORY;
-                export PYTHONIOENCODING=utf-8;
-                TF_CMD=$(
-                    thefuck THEFUCK_ARGUMENT_PLACEHOLDER $@
-                ) && eval $TF_CMD;
-                unset TF_HISTORY;
-                export PYTHONIOENCODING=$TF_PYTHONIOENCODING;
-                test -n "$TF_CMD" && print -s $TF_CMD
-            }
-        
-source ~/fzf-git.sh/fzf-git.sh
-KEYTIMEOUT=50
+
+deletarRepoAtual() {
+    # Get the name of the current folder
+    local repo_name=$(basename "$PWD")
+    
+    # Confirm the deletion
+    echo "Are you sure you want to delete the GitHub repository '$repo_name'? (yes/no)"
+    read confirmation
+    
+    # Proceed only if the user confirms
+    if [[ "$confirmation" == "yes" ]]; then
+        # Delete the GitHub repository using the GitHub CLI
+        gh repo delete "$repo_name" --confirm
+        echo "Repository '$repo_name' has been deleted."
+    else
+        echo "Operation canceled. Repository '$repo_name' was not deleted."
+    fi
+}
+
+
+deleteRepo() {
+  if [ -z "$1" ]; then
+    echo "Erro: Você precisa fornecer o nome do repositório."
+    echo "Uso: deleteRepo <nome_do_repositorio>"
+    return 1
+  fi
+
+  local REPO_NAME="$1"
+
+  # Ask for confirmation
+  echo "Tem certeza de que deseja deletar o repositório '$REPO_NAME'? Isso não pode ser desfeito."
+  echo -n "Digite 'SIM' para confirmar: "
+  read CONFIRMATION
+
+  if [ "$CONFIRMATION" != "SIM" ]; then
+    echo "Ação cancelada."
+    return 0
+  fi
+
+  # Delete the repository using gh
+  gh repo delete "$REPO_NAME" --confirm
+
+  if [ $? -eq 0 ]; then
+    echo "Repositório '$REPO_NAME' deletado com sucesso."
+  else
+    echo "Falha ao deletar o repositório '$REPO_NAME'. Verifique se ele existe e se você tem permissões adequadas."
+  fi
+}
+
+acessar_repo() {
+  # Get the current directory name
+  local repo_name
+  repo_name=$(basename "$PWD")
+
+  # GitHub URL
+  local url="https://github.com/SaganGromov/$repo_name"
+
+  # Check if Google Chrome is installed
+  if ! command -v google-chrome &> /dev/null; then
+    echo "Erro: Google Chrome não está instalado ou não está no PATH."
+    return 1
+  fi
+
+  # Check for --nova-janela option
+  if [[ "$1" == "--nova-janela" ]]; then
+    google-chrome --new-window "$url"
+  else
+    google-chrome "$url"
+  fi
+}
+
+BaixarVideo() {
+  if [ -z "$1" ]; then
+    echo "Erro: Você precisa fornecer a URL do vídeo."
+    return 1
+  fi
+
+  # Get the video URL
+  local URL="$1"
+  local REMOVE_SPONSORS=false
+  local DOWNLOAD_PATH="."
+
+  # Parse additional options
+  for arg in "$@"; do
+    if [[ "$arg" == "--sem-patrocinadores" ]]; then
+      REMOVE_SPONSORS=true
+    elif [[ "$arg" == --path=* ]]; then
+      DOWNLOAD_PATH="${arg#--path=}"
+    fi
+  done
+
+  # Check if the directory exists, and prompt to create it if not
+  if [ ! -d "$DOWNLOAD_PATH" ]; then
+    echo "O caminho '$DOWNLOAD_PATH' não existe."
+    echo -n "Deseja criá-lo? (sim/não): "
+    read CONFIRMATION
+    if [[ "$CONFIRMATION" == "sim" ]]; then
+      mkdir -p "$DOWNLOAD_PATH"
+      echo "Diretório '$DOWNLOAD_PATH' criado com sucesso."
+    else
+      echo "Ação cancelada. O download não será realizado."
+      return 1
+    fi
+  fi
+
+  # Get video title
+  local TITLE
+  TITLE=$(yt-dlp --get-title "$URL" 2>/dev/null)
+
+  if [ -z "$TITLE" ]; then
+    echo "Erro: Não foi possível obter o título do vídeo. Verifique a URL."
+    return 1
+  fi
+
+  # Output appropriate message
+  if $REMOVE_SPONSORS; then
+    echo "Baixando vídeo \"$TITLE\" em 1080p sem patrocinadores no formato MP4 para o diretório '$DOWNLOAD_PATH'..."
+    yt-dlp -f "bestvideo[ext=mp4][height=1080]+bestaudio[ext=m4a]" --merge-output-format mp4 --sponsorblock-remove all -P "$DOWNLOAD_PATH" "$URL"
+  else
+    echo "Baixando vídeo \"$TITLE\" em 1080p com patrocinadores no formato MP4 para o diretório '$DOWNLOAD_PATH'..."
+    yt-dlp -f "bestvideo[ext=mp4][height=1080]+bestaudio[ext=m4a]" --merge-output-format mp4 -P "$DOWNLOAD_PATH" "$URL"
+  fi
+}
+
+
+export FZF_DEFAULT_OPTS="--layout=reverse --height=40% --preview-window=wrap"
+
+
 alias cd='z'
 
+eog() {
+    nohup eog "$@" > /dev/null 2>&1 &
+    clear
+}
+
+evince() {
+    nohup evince "$@" > /dev/null 2>&1 &
+    clear
+}
 
 
-repos() {
-    # Ensure the target directory exists
-    TARGET_DIR="$HOME/github_repos"
-    mkdir -p "$TARGET_DIR"
 
-    # Use gh to get a list of repository names
-    echo "Fetching repository list..."
-    REPO_NAMES=$(gh repo list --json name --jq '.[].name')
+random_rename() {
+    local dir="$1"
+    local mode="$2" # "rename" or "restore"
+    local map_file=".rename_map"
+    local charset='a-zA-Z0-9~!@#$%^&*()_+=-'
 
-    if [ -z "$REPO_NAMES" ]; then
-        echo "No repositories found or gh is not configured."
+    if [[ -z "$dir" ]]; then
+        echo "Usage: random_rename <directory> [rename|restore]"
         return 1
     fi
 
-    # Create directories for each repository
-    echo "Creating directories..."
-    while IFS= read -r REPO_NAME; do
-        FOLDER_PATH="$TARGET_DIR/$REPO_NAME"
-        if [ ! -d "$FOLDER_PATH" ]; then
-            mkdir -p "$FOLDER_PATH"
-            echo "Created: $FOLDER_PATH"
-        else
-            echo "Already exists: $FOLDER_PATH"
-        fi
-    done <<< "$REPO_NAMES"
+    if [[ ! -d "$dir" ]]; then
+        echo "Error: '$dir' is not a valid directory."
+        return 1
+    fi
 
-    echo "All repositories have been processed."
+    if [[ "$mode" == "rename" ]]; then
+        if [[ -f "$dir/$map_file" ]]; then
+            echo "Error: Rename map already exists. Use restore mode to revert changes."
+            return 1
+        fi
+        touch "$dir/$map_file"
+        find "$dir" -depth | while read -r item; do
+            if [[ "$item" == "$dir/$map_file" ]]; then
+                continue
+            fi
+            local random_name
+            random_name=$(cat /dev/urandom | tr -dc "$charset" | head -c 32)
+            local new_path
+            new_path="$(dirname "$item")/$random_name"
+            echo "$item -> $new_path" >> "$dir/$map_file"
+            mv "$item" "$new_path"
+        done
+        echo "Renaming complete. Map stored in $dir/$map_file."
+    elif [[ "$mode" == "restore" ]]; then
+        if [[ ! -f "$dir/$map_file" ]]; then
+            echo "Error: No rename map found in $dir. Cannot restore."
+            return 1
+        fi
+        tac "$dir/$map_file" | while read -r line; do
+            local original_name
+            local renamed_name
+            original_name=$(echo "$line" | awk -F' -> ' '{print $1}')
+            renamed_name=$(echo "$line" | awk -F' -> ' '{print $2}')
+            mv "$renamed_name" "$original_name"
+        done
+        rm "$dir/$map_file"
+        echo "Restoration complete. Rename map removed."
+    else
+        echo "Invalid mode: Use 'rename' to rename files or 'restore' to revert."
+        return 1
+    fi
 }
 
-alias SSD='cd /mnt/wsl/PHYSICALDRIVE3p1/home/sagan'
+if [[ -o interactive ]]; then
+    # Bind Ctrl+f to insert 'zi' followed by a newline
+    bindkey -s '^F' 'zi\n'
+fi
+
+
+alias hds='cd /media/sagan && ls'
+
+
+
+baixarTorrent() {
+    if [ "$#" -lt 2 ]; then
+        echo "Usage: baixarTorrent <torrent-file1> [<torrent-file2> ...] <directory>"
+        return 1
+    fi
+
+    # Extract the directory (last argument)
+    local download_dir="${@: -1}"
+    local torrent_files=("${@:1:$#-1}")
+
+    # Check if qbittorrent-nox is installed
+    if ! command -v qbittorrent-nox &> /dev/null; then
+        echo "Error: qbittorrent-nox is not installed."
+        return 1
+    fi
+
+    # Check if the directory exists
+    if [ ! -d "$download_dir" ]; then
+        echo "Error: Directory '$download_dir' does not exist."
+        return 1
+    fi
+
+    # Loop through the torrent files and start the downloads
+    for torrent_file in "${torrent_files[@]}"; do
+        if [ ! -f "$torrent_file" ]; then
+            echo "Error: Torrent file '$torrent_file' not found. Skipping..."
+            continue
+        fi
+
+        echo "Starting download of '$torrent_file' to '$download_dir'..."
+        qbittorrent-nox --save-path="$download_dir" "$torrent_file"
+    done
+}
+
+
+alias WINDOWS11="echo "271828" | sudo -S efibootmgr -n 0001 && REINICIE"
+alias REFIND="echo "271828" | sudo -S efibootmgr -n 0000 && REINICIE"
